@@ -1703,7 +1703,7 @@ body.menu-open .logo {
     }
 
     .shop-banner-container {
-        height: 300px;
+        height: 400px;
     }
 
     .hero-container {
@@ -1808,7 +1808,7 @@ body.menu-open .logo {
     .tab-navigation {
         gap: 15px;
         overflow-x: auto;
-        justify-content: flex-start;
+        justify-content: center;
         padding-bottom: 15px;
     }
 
@@ -1820,6 +1820,10 @@ body.menu-open .logo {
     .product-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
+    }
+
+    .product-image {
+        border-radius: 8px;
     }
 
     .shop-page-grid {
@@ -1839,6 +1843,10 @@ body.menu-open .logo {
 
     .collections-grid {
         grid-template-columns: 1fr !important;
+    }
+
+    .collection-card {
+        aspect-ratio: 2 / 3;
     }
 
     .features-section {
