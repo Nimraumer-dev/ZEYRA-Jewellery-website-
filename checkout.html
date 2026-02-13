@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Jewellery Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .checkout-container {
+            max-width: 800px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+
+        .checkout-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .order-summary {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .checkout-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .checkout-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            background: #601026;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .back-to-shop {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="checkout-container">
+        <h1 class="checkout-title">Checkout Summary</h1>
+        <div id="checkoutItems" class="order-summary">
+            <!-- Items will be injected here via JS -->
+        </div>
+        <div class="checkout-total">
+            <span>Total amount to pay:</span>
+            <span id="finalTotal">Rs. 0</span>
+        </div>
+        <button class="place-order-btn" onclick="alert('Order Placed! Thank you for shopping with ZEYRA.')">Place
+            Order</button>
+        <a href="index.html" class="back-to-shop">Back to Shopping</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cart = JSON.parse(localStorage.getItem('zeyraCart')) || [];
+            const container = document.getElementById('checkoutItems');
+            const totalEl = document.getElementById('finalTotal');
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p>Your cart is empty.</p>';
+                return;
+            }
+
+            let total = 0;
+            cart.forEach(item => {
+                const price = parseInt(item.price.replace(/[^0-9]/g, ''));
+                total += price * item.quantity;
+                const div = document.createElement('div');
+                div.className = 'checkout-item';
+                div.innerHTML = `<span>${item.name} x ${item.quantity}</span><span>${item.price}</span>`;
+                container.appendChild(div);
+            });
+            totalEl.textContent = `Rs. ${total.toLocaleString()}`;
+        });
+    </script>
+</body>
+
+</html>
