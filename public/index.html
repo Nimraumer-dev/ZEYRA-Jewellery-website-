@@ -159,7 +159,7 @@
             </div>
 
             <!-- Earings -->
-            <div class="product-card" data-category="earings">
+            <div class="product-card" data-category="earrings">
                 <div class="product-image">
                     <img src="earings/BellaRubyStatementDropEarrings-1.jpg" alt="Earings">
                     <button class="add-to-cart">Add to cart</button>
@@ -837,9 +837,29 @@
             <div id="searchResults" class="search-results"></div>
         </div>
     </div>
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabContent, tabLinks;
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+                tabContent[i].classList.remove("active");
+            }
+            tabLinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tabLinks.length; i++) {
+                tabLinks[i].classList.remove("active");
+            }
+            const target = document.getElementById(tabName);
+            if (target) {
+                target.style.display = "block";
+                target.classList.add("active");
+            }
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+    <script type="module" src="app.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="app.js"></script>
+
 </body>
 
 </html>

@@ -698,6 +698,11 @@ body.menu-open .logo {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.new-badge.sale-badge {
+    background: #27ae60;
+    /* Green for Sale */
+}
+
 
 .info-section {
     max-width: 1000px;

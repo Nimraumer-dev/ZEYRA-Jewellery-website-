@@ -1,3 +1,7 @@
+import { auth, db, ref, set, onValue, onAuthStateChanged, addToCartFirebase, loginUser, signupUser, logoutUser } from './firebase-config.js';
+
+let currentUser = null;
+let cart = [];
 
 // Initialize Swiper only if the library is loaded and the container exists
 if (typeof Swiper !== 'undefined' && document.querySelector('.mySwiper')) {
@@ -20,33 +24,36 @@ if (typeof Swiper !== 'undefined' && document.querySelector('.mySwiper')) {
 }
 
 // Show/Hide the Category List
-const readMoreBtn = document.getElementById('readMoreBtn');
-const readLessBtn = document.getElementById('readLessBtn');
-const expandedContent = document.getElementById('expandedContent');
+function initToggles() {
+    const readMoreBtn = document.getElementById('readMoreBtn');
+    const readLessBtn = document.getElementById('readLessBtn');
+    const expandedContent = document.getElementById('expandedContent');
 
-if (readMoreBtn && readLessBtn && expandedContent) {
-    readMoreBtn.addEventListener('click', () => {
-        expandedContent.classList.remove('hidden');
-        readMoreBtn.classList.add('hidden');
-    });
+    if (readMoreBtn && readLessBtn && expandedContent) {
+        readMoreBtn.addEventListener('click', () => {
+            expandedContent.classList.remove('hidden');
+            readMoreBtn.classList.add('hidden');
+        });
 
-    readLessBtn.addEventListener('click', () => {
-        expandedContent.classList.add('hidden');
-        readMoreBtn.classList.remove('hidden');
-    });
-}
+        readLessBtn.addEventListener('click', () => {
+            expandedContent.classList.add('hidden');
+            readMoreBtn.classList.remove('hidden');
+        });
+    }
 
-document.querySelectorAll('.accordion-header').forEach(header => {
-    header.addEventListener('click', function (e) {
-        const item = this.closest('.accordion-item');
-        item.classList.toggle('open');
-        document.querySelectorAll('.accordion-item').forEach(otherItem => {
-            if (otherItem !== item) {
-                otherItem.classList.remove('open');
-            }
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', function (e) {
+            const item = this.closest('.accordion-item');
+            item.classList.toggle('open');
+            document.querySelectorAll('.accordion-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('open');
+                }
+            });
         });
     });
-});
+}
+document.addEventListener('DOMContentLoaded', initToggles);
 
 
 // Hamburger Menu Toggle
@@ -69,7 +76,6 @@ if (hamburgerMenu) {
 }
 
 // --- Cart Logic ---
-let cart = [];
 try {
     cart = JSON.parse(localStorage.getItem('zeyraCart')) || [];
 } catch (e) {
@@ -79,11 +85,89 @@ try {
 function saveCart() {
     try {
         localStorage.setItem('zeyraCart', JSON.stringify(cart));
+
+        // Sync with Firebase if user is logged in
+        if (currentUser) {
+            const cartRef = ref(db, `carts/${currentUser.uid}`);
+            set(cartRef, cart).catch(err => console.error("Firebase sync failed:", err));
+        }
     } catch (e) {
         console.warn("Could not save cart to storage.", e);
     }
     updateCartUI();
 }
+
+// Monitor Auth State
+onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+        console.log("User logged in:", user.email);
+        // Initial sync from Firebase - fetch existing cart for this user
+        const cartRef = ref(db, `carts/${user.uid}`);
+        onValue(cartRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                cart = data;
+                updateCartUI();
+                localStorage.setItem('zeyraCart', JSON.stringify(cart));
+            }
+        }, { onlyOnce: true });
+
+        // Update user icon for logged-in state
+        const userIcons = document.querySelectorAll('.fa-user');
+        userIcons.forEach(icon => {
+            icon.style.color = '#D4AF37'; // Gold color for logged in
+            icon.title = `Logged in as ${user.email}`;
+        });
+    } else {
+        console.log("User logged out");
+        // Update user icon for logged out state
+        const userIcons = document.querySelectorAll('.fa-user');
+        userIcons.forEach(icon => {
+            icon.style.color = ''; // Reset color
+            icon.title = "Login / Signup";
+        });
+    }
+});
+
+// Manual Debug Function - call debugDB() in your console (F12) to test connection
+window.debugDB = async function () {
+    console.log("--- DATABASE DEBUG START ---");
+    if (!currentUser) {
+        console.error("ERROR: Not logged in. Please sign up or login first.");
+        return;
+    }
+
+    console.log("Status: User is logged in as", currentUser.email);
+    console.log("UserID:", currentUser.uid);
+
+    try {
+        const { get, ref, db, set } = await import('./firebase-config.js');
+        const cartRef = ref(db, `carts/${currentUser.uid}`);
+        console.log("Action: Fetching data from path:", `carts/${currentUser.uid}`);
+
+        const snapshot = await get(cartRef);
+        if (snapshot.exists()) {
+            console.log("SUCCESS: Data found in Database:", snapshot.val());
+        } else {
+            console.warn("NOTICE: Connection works, but no data found for this user in DB.");
+        }
+
+        // Add a test write to verify permissions
+        console.log("Action: Attempting a test write to 'connection_test'...");
+        const testRef = ref(db, 'connection_test/' + currentUser.uid);
+        await set(testRef, { last_check: new Date().toISOString(), status: "working" });
+        console.log("SUCCESS: Test write passed! Your database is working and rules are correct.");
+
+    } catch (err) {
+        console.error("CRITICAL: Database operation failed!", err);
+        if (err.message.includes("PERMISSION_DENIED")) {
+            console.error("REASON: Your Firebase Database Rules are blocking access. Go to Firebase Console > Realtime Database > Rules and set them to true.");
+        }
+        console.log("Tip: Check your databaseURL in firebase-config.js. It must match your project region.");
+    }
+    console.log("--- DATABASE DEBUG END ---");
+};
 
 function updateCartUI() {
     const cartCounts = document.querySelectorAll('.cart-count');
@@ -111,7 +195,7 @@ function updateCartUI() {
                     <div class="cart-item-info">
                         <h4>${item.name}</h4>
                         <p>${item.price} x ${item.quantity}</p>
-                        <span class="remove-item" onclick="removeFromCart(${index})">Remove</span>
+                        <span class="remove-item" onclick="window.removeFromCart(${index})">Remove</span>
                     </div>
                 `;
                 cartItemsContainer.appendChild(itemDiv);
@@ -122,13 +206,23 @@ function updateCartUI() {
 }
 
 window.addToCart = function (name, price, image) {
+    const product = { name, price, image };
     const existing = cart.find(item => item.name === name);
     if (existing) {
         existing.quantity += 1;
     } else {
-        cart.push({ name, price, image, quantity: 1 });
+        cart.push({ ...product, quantity: 1 });
     }
+
     saveCart();
+
+    // Explicitly call the Firebase function but handle if logged out
+    addToCartFirebase(product).catch(err => {
+        // Silently handle - data is still in local storage for the user
+        console.log("Cart updated locally. Sign in to sync with your account.");
+    });
+
+    // Open Sidebar
     const sidebar = document.getElementById('cartSidebar');
     const overlay = document.getElementById('cartOverlay');
     if (sidebar) sidebar.classList.add('open');
@@ -198,27 +292,7 @@ document.addEventListener('DOMContentLoaded', updateCartUI);
 
 
 
-function openTab(evt, tabName) {
-    var i, tabContent, tabLinks;
-
-    // Hide all tab content
-    tabContent = document.getElementsByClassName("tab-content");
-    for (i = 0; i < tabContent.length; i++) {
-        tabContent[i].style.display = "none";
-        tabContent[i].classList.remove("active");
-    }
-
-    // Remove "active" class from all buttons
-    tabLinks = document.getElementsByClassName("tab-link");
-    for (i = 0; i < tabLinks.length; i++) {
-        tabLinks[i].classList.remove("active");
-    }
-
-    // Show the current tab and add active class to button
-    document.getElementById(tabName).style.display = "block";
-    document.getElementById(tabName).classList.add("active");
-    evt.currentTarget.className += " active";
-}
+// Tab Logic removed from here, now in index.html for reliability
 
 
 
@@ -254,11 +328,20 @@ const authClose = document.querySelector('.auth-close');
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
 
-// Open auth modal when user icon is clicked
+// Open auth modal or logout when user icon is clicked
 userIcons.forEach(icon => {
     icon.addEventListener('click', () => {
-        authModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        if (currentUser) {
+            if (confirm(`You are logged in as ${currentUser.email}. Do you want to logout?`)) {
+                window.handleLogout();
+            }
+        } else {
+            authModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // Ensure login form is shown by default
+            if (loginForm) loginForm.classList.add('active');
+            if (signupForm) signupForm.classList.remove('active');
+        }
     });
 });
 
@@ -296,63 +379,81 @@ window.switchToLogin = function (e) {
 // Handle login form submission
 window.handleLogin = function (e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
 
-    // Store user info in localStorage (in a real app, this would be an API call)
-    const user = {
-        email: email,
-        loggedIn: true,
-        timestamp: new Date().toISOString()
-    };
+    if (!emailInput || !passwordInput) return;
 
-    localStorage.setItem('zeyraUser', JSON.stringify(user));
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-    // Show success message
-    alert('Login successful! Welcome back.');
-
-    // Close modal
-    authModal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-
-    // Reset form
-    e.target.reset();
+    loginUser(email, password)
+        .then((userCredential) => {
+            alert('Login successful! Welcome back.');
+            window.location.href = 'index.html';
+        })
+        .catch((error) => {
+            console.error("Login Error Details:", error);
+            // Show more specific error message
+            let msg = "Login failed. ";
+            if (error.code === 'auth/user-not-found') msg += "No account found with this email.";
+            else if (error.code === 'auth/wrong-password') msg += "Incorrect password.";
+            else if (error.code === 'auth/invalid-email') msg += "Invalid email format.";
+            else msg += error.message;
+            alert(msg);
+        });
 };
 
 // Handle signup form submission
 window.handleSignup = function (e) {
     e.preventDefault();
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('signupConfirmPassword').value;
+    const nameInput = document.getElementById('signupName');
+    const emailInput = document.getElementById('signupEmail');
+    const passwordInput = document.getElementById('signupPassword');
+    const confirmInput = document.getElementById('signupConfirmPassword');
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-        alert('Passwords do not match!');
-        return;
+    if (!emailInput || !passwordInput) return;
+
+    const name = nameInput ? nameInput.value : '';
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    // Check confirm password only if the field exists
+    if (confirmInput) {
+        if (password !== confirmInput.value) {
+            alert('Passwords do not match!');
+            return;
+        }
     }
 
-    // Store user info in localStorage (in a real app, this would be an API call)
-    const user = {
-        name: name,
-        email: email,
-        loggedIn: true,
-        timestamp: new Date().toISOString()
-    };
+    signupUser(email, password)
+        .then((userCredential) => {
+            alert('Account created successfully! Welcome to ZEYRA.');
+            authModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            e.target.reset();
+        })
+        .catch((error) => {
+            console.error("Signup Error Details:", error);
+            let msg = "Signup failed. ";
+            if (error.code === 'auth/email-already-in-use') msg += "Email is already registered.";
+            else if (error.code === 'auth/weak-password') msg += "Password should be at least 6 characters.";
+            else msg += error.message;
+            alert(msg);
+        });
+};
 
-    localStorage.setItem('zeyraUser', JSON.stringify(user));
-
-    // Show success message
-    alert('Account created successfully! Welcome to ZEYRA.');
-
-    // Close modal
-    authModal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-
-    // Reset form
-    e.target.reset();
+// Handle Logout
+window.handleLogout = function () {
+    logoutUser().then(() => {
+        alert("Logged out successfully.");
+        localStorage.removeItem('zeyraCart');
+        cart = [];
+        updateCartUI();
+        location.reload();
+    }).catch((error) => {
+        console.error("Logout Error:", error);
+    });
 };
 
 // Handle contact form submission
