@@ -1,0 +1,11 @@
+#Heading{
+    color: red;
+    background-color: black;
+}
+li[class] {
+    font-size: 300%;
+}
+li[class~="a"] {
+    color: rgb(198, 138, 66);
+
+}

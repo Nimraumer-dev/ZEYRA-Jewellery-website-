@@ -1,0 +1,25 @@
+table,
+tr,
+th,
+td {
+    border: 2px solid black;
+    border-collapse: collapse;
+    padding: 10px;
+    border-spacing: 10px;
+}
+
+th {
+    background-color: aquamarine;
+}
+
+td {
+    background-color: antiquewhite;
+}
+
+.clip-circle {
+    width: 300px;        
+    height: 300px;         
+    object-fit: fill;  
+    clip-path: circle(45.8% at 50% 50%);
+    display: block;        
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+
+<body>
+    <div class="container">
+        <form action="">
+            <h1 class="main_heading">
+                Payment Form
+            </h1>
+            <hr>
+            <h2>User Information</h2>
+            <p>Name: *
+                <input type="text" required name="name" placeholder="Your name">
+            </p>
+            <p>
+            <fieldset>
+                <legend>Gender</legend>
+                Male <input type="radio" name="gender" id="Male" value="M" Required> Female <input type="radio"
+                    name="gender" id="Female" value="F" Required>
+            </fieldset>
+            </p>
+            <p>
+                Address: <textarea name="Address" id="Address" cols="100" rows="8"
+                    placeholder="Enter your Address"></textarea>
+            </p>
+            <p>
+                Email: <input type="Email" name="Email" id="Email" Required placeholder="Youremail@gmail.com">
+            </p>
+            <p>
+                Pincode: <input type="Number" name="Pincode" id="Pincode" Required placeholder="123456">
+            </p>
+            <h2>Payment Information:</h2>
+            <p>
+            <div class="accepted-cards">
+                <h3>Accepted Cards</h3>
+                <img src="img/bank card.png" alt="Accepted Cards" class="card-icons">
+            </div>
+            Card Type:
+            <select name="Card type" id="Card type" Required>
+                <option value="">---Select a Card Type---</option>
+                <option value="hbl_debit">HBL Debit Card</option>
+                <option value="hbl_credit">HBL Credit Crad</option>
+                <option value="ubl_wiz">UBL Wiz Card</option>
+                <option value="meezan_mastercard">Meezan Bank Mastercard</option>
+                <option value="meezan_debit">Meezan Bank Debit Card</option>
+            </select>
+            </p>
+            <p>
+                Card Number * <input type="number" name="Card number" id="Card Number" Required
+                    placeholder="1111-2222-3333-4444">
+            </p>
+            <p>
+                Expiration Date: <input type="Date" name="exp_date" id="exp_date" Required>
+            </p>
+            <p>
+                CVV <input type="Password" name="CVV" id="CVV" Required placeholder="123">
+            </p>
+            <p>
+                <button type="submit">Pay Now</button>
+            </p>
+        </form>
+    </div>
+</body>
+
+</html>
