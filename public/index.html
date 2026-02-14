@@ -70,19 +70,20 @@
             <div class="swiper-wrapper">
                 <div class="swiper-slide hero-slide">
                     <picture>
+                        <source media="(max-width: 768px)" srcset="home-banners/Bridal_Banner_Mobiel_size.webp">
+                        <img src="home-banners/Bridal_Banner.webp" style="border-radius: 30px;" alt="Banner 2"
+                            class="hero-img">
+                    </picture>
+                </div>
+                <div class="swiper-slide hero-slide">
+                    <picture>
                         <source media="(max-width: 768px)"
                             srcset="home-banners/Mobile_Banner_1_1756e311-2d0d-4809-b0a2-fc39debdec00.webp">
                         <img src="home-banners/Desktop_Banner_1.webp" style="border-radius: 30px;" alt="Banner 1"
                             class="hero-img">
                     </picture>
                 </div>
-                <div class="swiper-slide hero-slide">
-                    <picture>
-                        <source media="(max-width: 768px)" srcset="home-banners/Bridal_Banner_Mobiel_size.webp">
-                        <img src="home-banners/Bridal_Banner.webp" style="border-radius: 30px;" alt="Banner 2"
-                            class="hero-img">
-                    </picture>
-                </div>
+
                 <div class="swiper-slide hero-slide">
                     <picture>
                         <source media="(max-width: 768px)" srcset="home-banners/Mobile.webp">
@@ -857,6 +858,7 @@
             evt.currentTarget.classList.add("active");
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script type="module" src="app.js"></script>
 
 
